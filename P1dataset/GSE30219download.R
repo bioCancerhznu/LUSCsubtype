@@ -6,7 +6,7 @@
 rm(list = ls())
 
 # 设置工作目录
-setwd("D:\\pywork\\LUSC\\S3LUSC\\P1dataset\\GSE30219")
+setwd("D:\\S3LUSC\\P1dataset\\GSE30219")
 
 # 加载包
 library(GEOquery)
