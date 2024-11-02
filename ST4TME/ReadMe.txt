@@ -1,0 +1,1 @@
+The code in this content is used to calculate tumor microenvironment (TME) cell values using the EPIC algorithm. Subsequently, it plots the distribution of these cell values across different subtypes within the TCGA-LUSC dataset.
