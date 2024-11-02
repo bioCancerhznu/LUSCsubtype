@@ -67,7 +67,7 @@ process_data <- function(clinical_path, expr_path, sig_path) {
 }
 
 
-setwd("D:\\DuanWork\\S3LUSC")
+setwd("D:\\S3LUSC")
 
 # TCGA 
 tcga_data <- process_data(
@@ -220,7 +220,7 @@ print(p)
 
 getwd()
 
-setwd("D:\\DuanWork\\S3LUSC\\st8survML\\GSE30219")
+setwd("D:\\st8survML\\GSE30219")
 pdf(file = "cindex.pdf", height = 5, width = 4)
 print(p)
 dev.off()
