@@ -4,7 +4,7 @@
 
 #load packages
 rm(list = ls())
-setwd("D:\\DuanWork\\S3LUSC\\St1datasets\\GSE30219")
+setwd("D:\\St1datasets\\GSE30219")
 
 library(GEOquery)
 library(dplyr)
