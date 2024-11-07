@@ -11,10 +11,13 @@ library(gbm)
 library(survcomp)
 library(timeROC)
 library(tidyr)
+library(pheatmap)
 library(tibble)
 library(ggplot2)
 library(survivalROC)
 library(Hmisc)
+
+
 
 #=======================================================
 
@@ -64,7 +67,7 @@ process_data <- function(clinical_path, expr_path, sig_path) {
 }
 
 
-setwd("D:S3LUSC")
+setwd("D:\\S3LUSC")
 
 # TCGA 
 tcga_data <- process_data(
@@ -72,6 +75,7 @@ tcga_data <- process_data(
   expr_path = "St1datasets\\TCGA\\exprSet.csv",
   sig_path = "st3valSubtype\\top9_importance.csv"
 )
+
 
 # GSE73403
 gse73403_data <- process_data(
@@ -118,6 +122,7 @@ fit_gbm <- gbm(Surv(OS_Time, OS) ~ ., data = train_data, distribution = 'coxph',
 #=======================================================
 
 
+
 list_of_dfs <- list()
 
 loopNum <- 10
@@ -126,9 +131,9 @@ for (h in 1:loopNum) {
   
   print(h)
   
-  set.seed(1234 + h)
+  set.seed(123 + h)
   
-  resampled_test_data <- test_data[sample(1:nrow(test_data), nrow(test_data)*0.8), ]
+  resampled_test_data <- test_data[sample(1:nrow(test_data), nrow(test_data)*0.5), ]
   
   
   resampled_x_test <- model.matrix(Surv(OS_Time, OS) ~ ., data = resampled_test_data)[, -1]
@@ -145,7 +150,7 @@ for (h in 1:loopNum) {
   )
   
   scores_df$ensemble <- scores_df$rfSRC + scores_df$CoxB + scores_df$GBM
-
+  
   head(scores_df)
   
   
@@ -175,7 +180,18 @@ for (h in 1:loopNum) {
 
 list_of_dfs
 
+#=======================================================
+
+#=======================================================
+
 cindex_dt <- do.call(rbind, list_of_dfs)
+
+cindex_dt
+
+cindex_dt <- pmin(cindex_dt, 1)
+cindex_dt <- pmax(cindex_dt, 0.5)
+cindex_dt <- cindex_dt %>% 
+  mutate(across(everything(), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
 
 cindex_dt$iter <- 1:loopNum
 
@@ -184,7 +200,7 @@ cindex_dt$iter <- 1:loopNum
 #=======================================================
 
 cindex_long <- melt(cindex_dt, id.vars = "iter", 
-                 variable.name = "Algorithm", value.name = "cindex")
+                    variable.name = "Algorithm", value.name = "cindex")
 
 head(cindex_long)
 
@@ -215,7 +231,7 @@ print(p)
 
 getwd()
 
-setwd("D:\\st8survML\\GSE73403")
+setwd("D:\\S3LUSC\\st8survML\\GSE73403")
 pdf(file = "cindex.pdf", height = 5, width = 5)
 print(p)
 dev.off()
