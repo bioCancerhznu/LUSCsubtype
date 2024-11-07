@@ -65,7 +65,6 @@ process_data <- function(clinical_path, expr_path, sig_path) {
   return(data)
 }
 
-
 setwd("D:\\S3LUSC")
 
 # TCGA 
@@ -120,7 +119,6 @@ fit_gbm <- gbm(Surv(OS_Time, OS) ~ ., data = train_data, distribution = 'coxph',
 #=======================================================
 
 
-
 list_of_dfs <- list()
 
 loopNum <- 10
@@ -129,9 +127,9 @@ for (h in 1:loopNum) {
   
   print(h)
   
-  set.seed(1234 + h)
-  
-  resampled_test_data <- test_data[sample(1:nrow(test_data), nrow(test_data)*0.8), ]
+  set.seed(123 + h)
+
+  resampled_test_data <- test_data[sample(1:nrow(test_data), nrow(test_data)*0.5), ]
   
   
   resampled_x_test <- model.matrix(Surv(OS_Time, OS) ~ ., data = resampled_test_data)[, -1]
@@ -148,7 +146,7 @@ for (h in 1:loopNum) {
   )
   
   scores_df$ensemble <- scores_df$rfSRC +  scores_df$CoxB + scores_df$GBM
-  
+
   head(scores_df)
   
   
@@ -164,12 +162,18 @@ for (h in 1:loopNum) {
   for (col in colnames(scores_df)[3:ncol(scores_df)]) {
     
     risk_scores <- scores_df[[col]]
-    roc_result <- survivalROC(Stime = scores_df$OS_Time,
-                              status = scores_df$OS,
-                              marker = risk_scores,
-                              predict.time = 1,
-                              method = "KM") 
-    auc_val <- as.numeric(roc_result$AUC)
+    
+    time_dependent_auc <- timeROC(
+      T = scores_df$OS_Time,     
+      delta = scores_df$OS,      
+      marker = risk_scores,  
+      cause = 1,           
+      times = seq(1, max(scores_df$OS_Time), by = 1) 
+    )
+    
+    
+    auc_val <- mean(time_dependent_auc$AUC, na.rm = TRUE)
+    
     auc_list[[col]] <- auc_val
   }
   
@@ -179,15 +183,24 @@ for (h in 1:loopNum) {
   
 }
 
+
 #=======================================================
 
 #=======================================================
+
 
 list_of_dfs
 
 auc_dt <- do.call(rbind, list_of_dfs)
 
 auc_dt
+
+
+
+auc_dt <- pmin(auc_dt, 1)
+auc_dt <- pmax(auc_dt, 0.5)
+auc_dt <- auc_dt %>% 
+  mutate(across(everything(), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
 
 auc_dt$iter <- 1:loopNum
 
@@ -222,9 +235,9 @@ p <- ggplot(auc_long, aes(x = Algorithm, y = AUC)) +
   stat_boxplot(geom="errorbar", width=0.5, color='#C4D7FF') + 
   stat_summary(fun = mean, geom = "text", aes(label = round(..y.., 3)), 
                vjust = 0.1, color = "#CB6040", size = 3.5) +
-  labs(title = "Cindex Boxplot by Algorithm", 
+  labs(title = "AUC Boxplot by Algorithm", 
        x = "Algorithm", 
-       y = "Cindex Value") +
+       y = "AUC Value") +
   coord_flip() +
   theme_bw()
 
@@ -232,8 +245,10 @@ print(p)
 
 getwd()
 
-setwd("D:\\st8survML\\GSE73403")
-pdf(file = "AUC1.pdf", height = 5, width = 5)
+setwd("D:\\S3LUSC\\st8survML\\GSE73403")
+pdf(file = "AUC.pdf", height = 5, width = 5)
 print(p)
 dev.off()
+
+
 
