@@ -131,9 +131,9 @@ for (h in 1:loopNum) {
   
   print(h)
   
-  set.seed(1234 + h)
+  set.seed(123 + h)
   
-  resampled_test_data <- test_data[sample(1:nrow(test_data), nrow(test_data)*0.8), ]
+  resampled_test_data <- test_data[sample(1:nrow(test_data), nrow(test_data)*0.5), ]
   
   
   resampled_x_test <- model.matrix(Surv(OS_Time, OS) ~ ., data = resampled_test_data)[, -1]
@@ -180,9 +180,22 @@ for (h in 1:loopNum) {
 
 list_of_dfs
 
+#=======================================================
+
+#=======================================================
+
+
 cindex_dt <- do.call(rbind, list_of_dfs)
 
+cindex_dt
+
+cindex_dt <- pmin(cindex_dt, 1)
+cindex_dt <- pmax(cindex_dt, 0.5)
+cindex_dt <- cindex_dt %>% 
+  mutate(across(everything(), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
 cindex_dt$iter <- 1:loopNum
+
 
 #=======================================================
 
@@ -220,8 +233,8 @@ print(p)
 
 getwd()
 
-setwd("D:\\st8survML\\GSE30219")
-pdf(file = "cindex.pdf", height = 5, width = 4)
+setwd("D:\\S3LUSC\\st8survML\\GSE30219")
+pdf(file = "cindex.pdf", height = 5, width = 5)
 print(p)
 dev.off()
 
