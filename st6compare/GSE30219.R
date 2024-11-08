@@ -23,7 +23,7 @@ rm(list = ls())
 #=======================================================
 
 
-setwd("D:\\DuanWork\\S3LUSC\\St1datasets\\GSE30219")
+setwd("D:\\S3LUSC\\St1datasets\\GSE30219")
 expr_or <- read.csv("exprSet.csv", header = T, row.names = 1)
 expr_or <- as.data.frame(t(expr_or))
 
@@ -49,7 +49,7 @@ rownames(aucValue) <- paste0("Traindata", 1:repNum)
 
 #=======================================================
 
-setwd("D:\\DuanWork\\S3LUSC\\st3valSubtype")
+setwd("D:\\S3LUSC\\st3valSubtype")
 signature15 <- read.csv("top9_importance.csv", header = T, row.names = 1)
 signature15 <-  signature15$Variable
 
@@ -88,7 +88,7 @@ for (g in 1:num_signatures) {
   expr <- expr_or[, which(colnames(expr_or) %in% genesnam)]
   expr$Sample <- rownames(expr)
   
-  clincadata <- read.csv("D:\\DuanWork\\S3LUSC\\St1datasets\\GSE30219\\pd.csv", row.names = 1)
+  clincadata <- read.csv("D:\\S3LUSC\\St1datasets\\GSE30219\\pd.csv", row.names = 1)
   clincadata$Sample <- rownames(clincadata)
   head(clincadata)
   
@@ -222,7 +222,7 @@ CindexValue$dataset <- rownames(CindexValue)
 aucValue$dataset <- rownames(aucValue)
 
 
-setwd("D:\\DuanWork\\S3LUSC\\st6compare\\GSE30219")
+setwd("D:\\S3LUSC\\st6compare\\GSE30219")
 
 
 p1 <- plot_boxplot(CindexValue, title = "C-index Values by Signature", y_label = "C-index Value")
