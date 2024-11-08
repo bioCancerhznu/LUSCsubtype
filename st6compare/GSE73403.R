@@ -23,7 +23,7 @@ rm(list = ls())
 #=======================================================
 
 
-setwd("D:St1datasets\\GSE73403")
+setwd("D:\\S3LUSC\\St1datasets\\GSE73403")
 expr_or <- read.csv("exprSet.csv", header = T, row.names = 1)
 expr_or <- as.data.frame(t(expr_or))
 
@@ -41,25 +41,15 @@ CindexValue <- data.frame(matrix(0, nrow = repNum, ncol = num_signatures))
 colnames(CindexValue) <- signature_names
 rownames(CindexValue) <- paste0("Traindata", 1:repNum)
 
-
-aucValue1 <- data.frame(matrix(0, nrow = repNum, ncol = num_signatures))
-colnames(aucValue1) <- signature_names
-rownames(aucValue1) <- paste0("Traindata", 1:repNum)
-
-
-aucValue3 <- data.frame(matrix(0, nrow = repNum, ncol = num_signatures))
-colnames(aucValue3) <- signature_names
-rownames(aucValue3) <- paste0("Traindata", 1:repNum)
-
-aucValue5 <- data.frame(matrix(0, nrow = repNum, ncol = num_signatures))
-colnames(aucValue5) <- signature_names
-rownames(aucValue5) <- paste0("Traindata", 1:repNum)
+aucValue <- data.frame(matrix(0, nrow = repNum, ncol = num_signatures))
+colnames(aucValue) <- signature_names
+rownames(aucValue) <- paste0("Traindata", 1:repNum)
 
 #=======================================================
 
 #=======================================================
 
-setwd("D:\\st3valSubtype")
+setwd("D:\\S3LUSC\\st3valSubtype")
 signature15 <- read.csv("top9_importance.csv", header = T, row.names = 1)
 signature15 <-  signature15$Variable
 
@@ -68,9 +58,9 @@ signature2 <- c("MGST3", "TMED3", "PPIB", "GEMIN6")
 signature3 <- c('POLD4', 'MRPL40', 'ITPA', 'ERCC3', 'TK2', 
                 'POLR3GL', 'VPS28', 'CANT1', 'SDCBP', 'CCNO')
 signature4 <- c('IL6', 'NOD1', 'CASP4')
-signature5 <- c("ANGPTL5", "CD1B", "CD1E", "CNTFR", "CTSG", "EDN3", "IL12B", "IL2")
+signature5 <- c("CCL1", "KLRC3", "KLRC4", "CCL23", "KLRC1")
 signature6 <- c("CCL15", "CXCL7", "VAV2")
-signature7 <- c("CD1B", "CHRNA6", "CLEC12B", "CLEC17A", "CLNK", "INHA", "SLC14A2")
+signature7 <- c('C4BPB', 'FCAMR', 'GRAPL', 'MAP1LC3C', 'MGC2889', 'TRIM55', 'UGT1A1', 'VIPR2')
 signature8 <- c("FGG", "C3", "FGA", "JUN", "CST3", "CPSF4", "HIST1H2BH")
 signature9 <- c("CALCB", "GCGR", "HTR3A", "AMH", "VGF", "SEMA3B", "NRTN", "ENG", "ACVRL1", "NR4A1")
 signature10 <- c("CXCL2", "SMAD7", "HELLS", "IL1B")
@@ -78,6 +68,7 @@ signature11 <- c("SREBF2", "GP2", "BMX", "NR1H4", "DDX41", "GOPC")
 signature12 <- c("S100P", "PLAU", "NOD1", "TRAV39")
 signature13 <- c("ABCC5", "CLDN1", "CSTA")
 signature14 <- c("ALOX5", "DPP4", "PHKG2", "FADS2", "NOX1")
+
 
 geneslist <- list(gsg1  = signature1,  gsg2  = signature2,  gsg3  = signature3,  
                   gsg4 =  signature4,  gsg5 =  signature5,
@@ -98,7 +89,7 @@ for (g in 1:num_signatures) {
   expr <- expr_or[, which(colnames(expr_or) %in% genesnam)]
   expr$Sample <- rownames(expr)
   
-  clincadata <- read.csv("D:St1datasets\\GSE73403\\pd.csv", row.names = 1)
+  clincadata <- read.csv("D:\\S3LUSC\\St1datasets\\GSE73403\\pd.csv", row.names = 1)
   clincadata$Sample <- rownames(clincadata)
   head(clincadata)
   
@@ -114,8 +105,8 @@ for (g in 1:num_signatures) {
   
   for (i in 1:iterations) {
     
-    set.seed(1234 + i)
-    selected_samples <- selected_data[sample(1:nrow(selected_data), nrow(selected_data)/2), ]
+    set.seed(123 + i)
+    selected_samples <- selected_data[sample(1:nrow(selected_data), 0.5 * nrow(selected_data)), ]
     results_list[[i]] <- selected_samples
     
   }
@@ -142,54 +133,8 @@ for (g in 1:num_signatures) {
   
   # =========================================================
   
-  timeauc_list_1year <- numeric(length(results_list))
   
-  
-  one_year <- 1
-  
-  for (i in 1:length(results_list)) {
-    
-    data <- results_list[[i]]
-    signature_vars <- data[, !(colnames(data) %in% c("OS", "OS_Time"))]
-    surv_obj <- Surv(time = data$OS_Time, event = data$OS)
-    cox_model <- coxph(surv_obj ~ ., data = signature_vars)
-    risk_score <- predict(cox_model, type = "lp")
-    survival_roc <- survivalROC(Stime = data$OS_Time, status = data$OS,
-                                marker = risk_score, predict.time = one_year, method = "KM")
-    
-    timeauc_list_1year[i] <- survival_roc$AUC
-    
-  }
-  
-  aucValue1[,g] <- timeauc_list_1year
-  
-  # =========================================================
-  
-  timeauc_list_3years <- numeric(length(results_list))
-  
-  three_years <- 3
-  
-  for (i in 1:length(results_list)) {
-    
-    data <- results_list[[i]]
-    signature_vars <- data[, !(colnames(data) %in% c("OS", "OS_Time"))]
-    surv_obj <- Surv(time = data$OS_Time, event = data$OS)
-    cox_model <- coxph(surv_obj ~ ., data = signature_vars)
-    risk_score <- predict(cox_model, type = "lp")
-    survival_roc <- survivalROC(Stime = data$OS_Time, status = data$OS,
-                                marker = risk_score, predict.time = three_years, method = "KM")
-    
-    timeauc_list_3years[i] <- survival_roc$AUC
-    
-  }
-  
-  aucValue3[,g] <- timeauc_list_3years
-  
-  # =========================================================
-  
-  timeauc_list_5years <- numeric(length(results_list))
-  
-  five_years <- 5
+  timeauc_list <- numeric(length(results_list))
   
   for (i in 1:length(results_list)) {
     
@@ -199,14 +144,23 @@ for (g in 1:num_signatures) {
     cox_model <- coxph(surv_obj ~ ., data = signature_vars)
     risk_score <- predict(cox_model, type = "lp")
     
-    survival_roc <- survivalROC(Stime = data$OS_Time, status = data$OS,
-                                marker = risk_score, predict.time = five_years, method = "KM")
+    time_dependent_auc <- timeROC(
+      T = data$OS_Time,     
+      delta = data$OS,      
+      marker = risk_score,  
+      cause = 1,           
+      times = seq(1, max(data$OS_Time), by = 1) 
+    )
     
-    timeauc_list_5years[i] <- survival_roc$AUC
+    
+    mean_auc <- mean(time_dependent_auc$AUC, na.rm = TRUE)
+    
+    
+    timeauc_list[i] <- mean_auc
     
   }
   
-  aucValue5[,g] <- timeauc_list_5years
+  aucValue[,g] <- timeauc_list
   
 }
 
@@ -245,31 +199,39 @@ plot_boxplot <- function(data, title, y_label) {
   print(p)
 }
 
+#=======================================================
+
+#=======================================================
+
+CindexValue <- pmin(CindexValue, 1)
+CindexValue <- pmax(CindexValue, 0.5)
+CindexValue <- CindexValue %>% 
+  mutate(across(everything(), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+
+aucValue <- pmin(aucValue, 1)
+aucValue <- pmax(aucValue, 0.5)
+aucValue <- aucValue %>% 
+  mutate(across(everything(), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
 
 #=======================================================
 
 #=======================================================
 
 CindexValue$dataset <- rownames(CindexValue)
-aucValue1$dataset <- rownames(aucValue1)
-aucValue3$dataset <- rownames(aucValue3)
-aucValue5$dataset <- rownames(aucValue5)
+aucValue$dataset <- rownames(aucValue)
 
 
-setwd("D:\\st6compare\\GSE73403")
+setwd("D:\\S3LUSC\\st6compare\\GSE73403")
 
 
 p1 <- plot_boxplot(CindexValue, title = "C-index Values by Signature", y_label = "C-index Value")
-ggsave("CindexValue_Boxplot.pdf", plot = p1, width = 6, height = 5)
+ggsave("Cindex_Boxplot.pdf", plot = p1, width = 5, height = 5)
 
 
-p2 <- plot_boxplot(aucValue1, title = "1 Year AUC Values by Signature", y_label = "AUC Value")
-ggsave("AUC1Year_Boxplot.pdf", plot = p2, width = 6, height = 5)
-
-
-p3 <- plot_boxplot(aucValue5, title = "5 Year AUC Values by Signature", y_label = "AUC Value")
-ggsave("AUC5Year_Boxplot.pdf", plot = p3, width = 6, height = 5)
-
+p2 <- plot_boxplot(aucValue, title = "AUC Values by Signature", y_label = "AUC Value")
+ggsave("AUC_Boxplot.pdf", plot = p2, width = 5, height = 5)
 
 getwd()
 
