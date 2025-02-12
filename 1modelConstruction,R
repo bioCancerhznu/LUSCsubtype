@@ -1,0 +1,52 @@
+#=======================================================
+
+#=======================================================
+
+rm(list = ls())
+library(tibble)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(survival)
+library(survminer)
+library(caret)
+library(randomForest)
+
+#=======================================================
+
+#=======================================================
+
+setwd("D:\\DuanWork\\S3LUSC\\St2subtype")
+expr <- read.csv("data_train.csv", header = T, row.names = 1)
+expr$Sample <- rownames(expr)
+groupdata <- read.csv("Train_subtype.csv", row.names = 1)
+
+data <- merge(groupdata, expr, by = "Sample")
+
+rownames(data) <- data$Sample
+data$Sample <- NULL
+
+setwd("D:\\DuanWork\\S3LUSC\\st3valSubtype")
+write.csv(data, file = "dataTain.csv")
+
+#=======================================================
+
+#=======================================================
+
+set.seed(123)
+
+data$group <- as.factor(data$group)
+
+train_control <- trainControl(method = "cv", number = 5) 
+
+rf_model <- train(
+  group ~ .,       
+  data = data,   
+  method = "rf",    
+  trControl = train_control 
+)
+
+
+print(rf_model)
+
+save(rf_model, file = "rf_model.Rdata")
